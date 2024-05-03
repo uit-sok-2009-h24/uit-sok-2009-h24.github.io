@@ -23,8 +23,8 @@ Seminarene blir basert på oppgavegjennomgang.
 
 
 ## Faglærerinfo  
-[Erik Eriksen Heen](https://uit.no/ansatte/eirik.e.heen){:target="blank"} (fagansvarlig). Kontor: 02.411
-[Markus Johnsen Aase](https://uit.no/ansatte/markus.j.aase){:target="blank"} (fagansvarlig). Kontor: 02.411
+- [Erik Eriksen Heen](https://uit.no/ansatte/eirik.e.heen){:target="blank"} (fagansvarlig). Kontor: 02.325
+- [Markus Johnsen Aase](https://uit.no/ansatte/markus.j.aase){:target="blank"} (fagansvarlig). Kontor: 02.411
 
 xxx er (seminar/studenthjelp,<xxx@post.uit.no>)
 
