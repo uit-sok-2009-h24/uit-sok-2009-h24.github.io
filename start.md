@@ -23,8 +23,12 @@ Seminarene blir basert på oppgavegjennomgang.
 
 
 ## Faglærerinfo  
+[Erik Eriksen Heen](https://uit.no/ansatte/eirik.e.heen){:target="blank"} (fagansvarlig). Kontor: 02.411
+[Markus Johnsen Aase](https://uit.no/ansatte/markus.j.aase){:target="blank"} (fagansvarlig). Kontor: 02.411
 
+xxx er (seminar/studenthjelp,<xxx@post.uit.no>)
 
+xxx har også kontortid, der studentene kan stille spørsmål om de har behov (ikke obligatorisk!). Se timeplan. 
 ## Administrative spørsmål
 
 For henvendelser av administrative art send e-post til: <hhcampus@hjelp.uit.no>. Der får du hjelp av Handelshøgskolens administrasjon. De kan hjelpe dere med slike ting som tillrettelegelse under eksamen, 
