@@ -1,0 +1,298 @@
+---
+title: "Seminar 2 fasit"
+author: "Eirik Heen"
+format: html
+editor: visual
+date: "Sist redigert `r format(Sys.Date(),'%d %B %Y')` "
+---
+
+
+```{r setup, include=FALSE}
+##### Start up #####
+rm(list = ls()) # Tommer listen
+
+options(scipen=10) # skriver ut 10 siffer (foran komma)
+options(digits=5) # skriver ut 5 desimaler (etter komma...)
+
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(janitor))
+suppressPackageStartupMessages(library(infer))
+suppressPackageStartupMessages(library(HH))
+
+# Kode for a kunne bruke norske bokstaver
+Sys.setlocale(locale="no_NO")
+
+# Henter inn dataset for seminar basert på spørre undersøkelsen
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/spore_under.Rdata?raw=true") )
+colnames(spore_under) <- make.unique(c("Nummer","Alder","Kjonn","Vekt","Kroppshoyde","Jobb","Jobb_timer","Studentforening","Sport","Sport_timer","Fest","Fest_n_byen","Fest_n_byen","Alkoholkonsum","Studieprogram", "Karakter","UiT","Sporsmal_forelesning","Forventet_karakter","Studietimer","Seminar_metode","Tidsfrist","Arbeidsmengde","Samarbeidsproblem" ) )
+
+
+# Hent inn late shipments dataen
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/late_shipments.Rdata?raw=true"))
+
+# Velger data
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/dem_county_pres_joined.Rdata?raw=true"))
+
+```
+
+
+
+# Seminar 2
+
+I dette seminaret skal vi fokusere på hypotesetesting.
+
+## Oppgave 1
+
+For datasettet 'late_shipments' er det to variabler som forteller oss om forsendelsen har vert forsinket eller ikke, dette er 'late' og 'late_delivery'.
+
+### Oppgave 1.1
+
+Hvor stor andel av forendelsene er forsen
+
+Med til bakelegg replikker dataene for sent forsendelser. For hver replikasjon bruk prop=1, altså at du trekker like mange ganger som observasjoner i datasettet. Replikker 1'000 ganger, og plott resultatet i et histogram.
+
+```{r}
+late_shipments %>%
+  summarise(original_prop_late = mean(late == "Yes"))
+set.seed(1337)
+prop_late <- replicate(
+  n = 1000,
+  expr = {
+    late_shipments %>%
+      slice_sample(prop = 1 , replace = TRUE) %>% 
+      summarise(prop_late = mean(late == "Yes")) %>%
+      pull(prop_late)
+  }
+)
+
+prop_late <- tibble(prop_late) 
+
+ggplot(prop_late, aes(x=prop_late)) +
+  geom_histogram(bins=20)
+
+```
+
+Gjennomsnittet av forsendeler som var forsinket i dette datasettet er 0.067, eller 6.7%.
+Her har vi laget 1'000 gjennomsnitt (proposjoner) fra det orginale datasettet med tilbakelegg, dette gir oss et bilde av hvordan gjennomsnitte burde være fordelt hvis vi skulle hente 1'000 nye observasjoner fra populasjonen (dette forusetter at dataen var tillfeldig trukket i det datasettet vi har). Vi ser at proposjonene er relativt "normalfordelt". Og at store deler av fordelinger ligger mellom 0.055 og 0.08.
+
+
+
+### Oppgave 1.2
+
+Fra replikasjonen i oppg1.1 regn ut gjennomsnittet og standardavviket til gjennomsnittene.
+
+```{r}
+prop_late %>%
+  summarise(gj_forsen = mean(prop_late), 
+            sd_prop_forsen = sd(prop_late))
+
+```
+
+
+### Oppgave 1.3
+
+Fra utvalget (altså observasjonene i det originale datasettet) regn ut, gjennomsnitt, standardavvik og standard error. Husk standard error skrives $se=\frac{\sigma}{\sqrt{n}}$ .
+
+```{r}
+late_shipments %>%
+  summarise(gj_forsent = mean(late == "Yes"), 
+            sd_forsent = sd(late == "Yes"), 
+            stadard_error =sd(late == "Yes") / sqrt(n() ) )
+
+```
+Fra oppgaven over ser av at gjennomsnittene er veldig nære. Dette forteller oss at om vi bruker klassis statistiske modeller eller modere replikasjons metoder til å finne standard error får vi veldig like verdier. 
+
+
+### Oppgave 1.4
+
+Sammenlikn standard error oppg1.3 med standardavviket til gjennomsnittet oppg1.2
+
+Svar: Her ser vi at utregnet standard error 0.79% er veldig nært standardavviket til de replikerte proposjonene 0.7%. Denne forklarer usikkerheten til hvor den faktiske proposjonen befinner seg.
+
+### Oppgave 1.5
+
+Ut fra dataen ønsker vi å vi forsikre "kundene" som bruker denne shipping metoden at ikke mer enn 8% av forsendelsene er forsene. Anta et signifikans nivå på 1%, altså $\alpha = 0.01$.
+
+#### Oppgave 1.5.1
+
+Start med å sett opp nullhypotesen og alternativs hypotesen. For hvilken $p-verdi$ sammenliknet med signifikans nivået skal vi beholde nullhypotesen eller forkaste nullhypotesen?
+
+$H_{0}:$ Mer enn 8% av forsendelsen kommer forsent. 
+$H_{1}:$ Mindre enn 8% av forsendelsene kommer forsent.
+
+Vi forkaster $H_{0}$ hvis p-veriden er mindre enn signifikans nivået. I denne oppgaven 1% Vi beholder $H_{0}$ hvis p-veriden er større enn signifikans nivået. I denne oppgaven 1%
+
+#### Oppgave 1.5.2
+
+Plott histogramet fra oppg. 1.1 på nytt. Legg til en vertikal linje for 0.08. Fra dette tror vi at vi kan på et 1% signifikansnivå si at gjennomsnittlige forsentkomminger er under 8%?
+
+```{r}
+ggplot(prop_late, aes(x=prop_late)) +
+  geom_histogram() +
+  geom_vline(xintercept = 0.08, color = "Red")
+
+```
+
+Det ser ut som om vi ikke kan forkaste H0 fordi det ser ut som det er mer enn 1% over den rød streken.
+
+#### Oppgave 1.5.3
+
+Gjennomfør en t-test og konkluder ut fra dette.
+
+```{r}
+test <- t.test(late_shipments$late_delivery,
+       mu= 0.08,
+       alternative = "less"
+       )
+test
+test$statistic
+p_verdi <- test$p.value
+
+```
+
+Etter denne testen ser vi at p-verdien er `r test$p.value` som er større enn signifikans nivå. Dette betyr at vi beholder H0. Og vi kan ikke si at forsendelsene er mindre enn 8% forsene.
+
+#### Oppgave 1.5.4
+
+Siden for sent forsendelse er en dikotom variable (altså kun 0 eller 1), kan det være bedre å bruke en proporsjons test. Gjennomfør en proporsjons test og konkluder. Hvilken av testene burde brukes (sammenlign med oppg1.5.2)?
+
+```{r}
+prop_test(late_shipments, 
+          late ~ NULL,
+          success = "Yes",
+          p=0.08,
+          alternative = "less")
+
+```
+
+Når vi kjører en proposjonstest isteden for en t-test blir p-verdien høyere. Dette er fordi en t-test ikke er egnet til å brukes på proposjoner.
+
+#### Oppgave 1.5.5
+
+Når du skal gjennomføre en hypotese testing. Hvilken feil kan du gjøre? Hvilken "rett" kan man ha.
+
+Sammenlinker med en rettsak
+
+Første feil: Forksate H0 når den er sann. Dette betyr at "man dømme en uskyldi". Type 1 feil. Andre feil: Beholde H0 når den er feil. Dette betyr at "en skyld går fri". Type 2 feil.
+
+Korrekte valg: forkaste H0 når den feil eller beholde h0 når den er sann.
+
+## Oppgave 2
+
+I denne oppgaven skal vi se litt nærmere på demokratenes president valg i USA.
+
+### Oppgave 2.1
+
+Få litt oversikt over datasettet og hva det inneholder.
+
+```{r}
+glimpse(dem_presidental)
+
+```
+
+### Oppgave 2.2
+
+Lag et boxplot av prosentvis stemmer de demokratiske presidentene har fått i 2008, 2012 og 2016. Er det noe forskjell?
+
+```{r}
+ggplot(dem_presidental, aes(x = dem_percent_08)) +
+  geom_boxplot()
+ggplot(dem_presidental, aes(x = dem_percent_12)) +
+  geom_boxplot()
+ggplot(dem_presidental, aes(x = dem_percent_16)) +
+  geom_boxplot()
+
+```
+
+### Oppgave 2.3
+
+Test om det er noe forskjell mellom stemmer mottatt mellom 2008 og 2012, 2008 og 2016, 2012 og 2016. Gjennomfør en uparet t-test?
+
+```{r}
+t.test(dem_presidental$dem_cand_votes_08,
+       dem_presidental$dem_cand_votes_12  )
+
+
+t.test(dem_presidental$dem_cand_votes_08,
+       dem_presidental$dem_cand_votes_16  )
+
+
+t.test(dem_presidental$dem_cand_votes_12,
+       dem_presidental$dem_cand_votes_16  )
+
+```
+
+### Oppgave 2.4
+
+Gjennomfør en paret t-test? Hvorfor er det så stor forskjell? Og hvordan burde vi bruke?
+
+```{r}
+t.test(dem_presidental$dem_cand_votes_08,
+       dem_presidental$dem_cand_votes_12 , 
+       paired = TRUE )
+
+t.test(dem_presidental$dem_cand_votes_08,
+       dem_presidental$dem_cand_votes_16 , 
+       paired = TRUE )
+
+
+```
+
+## Oppgave 3
+
+For spørre undersøkelsen, skal vi undersøke om sammenheng mellom hvor fornøyd studentene er og karakter så langt.
+
+#### Oppgave 3.1
+
+Dette er to kategoriske variabler. Start med å lage en tabell over dataen.
+
+```{r}
+Tabell <- table( spore_under$Studieprogram,spore_under$Karakter)
+
+Tabell
+```
+
+#### Oppgave 3.2
+
+Gjennomfør en Kjikvadrattest. Hva er nullhypotesen og alternativs hypotesen til denne testen? Hva kan vi konkludere ut fra denne testen? Bruk et signifikansnivå på 10%.
+
+Nullhypotse: Ingen sammenheng mellom rader og kolloner 
+Alternativs hypoteste: Det er sammenheng mellom rader og kolloner.
+
+```{r}
+
+Test <- chisq.test(Tabell)
+Test
+
+```
+
+Beholder nullhypotesen fordi p-verdi er større en signifikansnivå som var 10%
+
+#### Oppgave 3.3
+
+Ut fra dataen hvordan "forventer" vi at dataen skal se ut?
+
+```{r}
+Test$expected
+
+```
+
+### Oppgave 3.4
+
+Gjennomfør samme analyse for 'late_shipments', hvor du sammenlikner hva forsendelsen inneholdt og hvilken land den skulle til (sub_classification, country).
+
+```{r}
+Tabell <- table( late_shipments$country, late_shipments$sub_classification)
+
+Tabell
+
+Test <- chisq.test(Tabell)
+Test
+
+
+```
+
+Det ser ut til å være en sammneheng mellom forsendelsetype og land. Kanskje fordi det burde være en sammenhemg mellom land og om de tenger HIV-tester eller kanskje Malaria medisin? 
+

@@ -1,0 +1,168 @@
+---
+title: "Seminar 5"
+author: "Eirik Heen"
+format: html
+editor: visual
+date: "Sist redigert `r format(Sys.Date(),'%d %B %Y')` "
+---
+
+
+```{r setup, include=FALSE}
+##### Start up #####
+
+options(scipen=10) # skriver ut 10 siffer (foran komma)
+options(digits=5) # skriver ut 5 desimaler (etter komma...)
+
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(janitor))
+suppressPackageStartupMessages(library(infer))
+suppressPackageStartupMessages(library(HH))
+suppressPackageStartupMessages(library(mosaic))
+suppressPackageStartupMessages(library(car))
+suppressPackageStartupMessages(library(statisticalModeling))
+suppressPackageStartupMessages(library(rpart))
+suppressPackageStartupMessages(library(rpart.plot))
+
+# Kode for a kunne bruke norske bokstaver
+Sys.setlocale(locale="no_NO")
+
+# Taiwan dataset
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/taiwan_real_estate.Rdata?raw=true"))
+
+
+
+
+# Bolig prise
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/Bolig.Rdata?raw=true"))
+
+
+
+```
+
+
+
+# Seminar 5
+
+På dette seminaret skal vi se på permutasjons tester av regresjoner, bruke maskin learning på data og bruke MSE (mean squard error) til å sammenlikne modeller.
+
+## Oppgave 1
+
+I denne oppgaven skal vi se på hva som predikerer lønn i datasettet *CPS85*. For å få oversikt over dataen kan du se på dokumentasjonen, trykk [**her**](https://www.rdocumentation.org/packages/mosaicData/versions/0.20.3/topics/CPS85).
+
+```{r hente data, include=FALSE}
+# Henter dataen CPS85
+data("CPS85")
+
+```
+
+### Oppgave 1.1
+
+Gjennomfør en lineær regresjon med *inntekt* som avhengig variabel og *utdanning*, *arbeissektor*, *kjønn* og *alder* som uavhengige variabler. Tolk resultatene fra modellen.
+
+```{r}
+
+
+
+
+```
+
+#### Oppgave 1.1.1
+
+Fra oppgave 1.1 regn ut MSE (mean squard error) for denne modellen.
+
+```{r}
+
+```
+
+### Oppgave 1.2
+
+Gjennomfør en rekursiv partisjons modell (recursice partitiong, rpart()) med *inntekt* som avhengig variabel og *utdanning*, *arbeissektor*, *kjønn* og *alder* som uavhengige variabler. Tolk resultatene fra modellen. Skriv ut resultatene av modellen.
+
+```{r}
+
+```
+
+#### Oppgave 1.2.1
+
+Fra oppgave 1.2 tegn resultatene inn i et node diagram.
+
+```{r}
+
+```
+
+#### Oppgave 1.2.2
+
+Sammenkling resultatene i 1.2 og 1.2.1. Ser strukturen liknende ut.
+
+#### Oppgave 1.2.3
+
+Regn ut MSE for modellen i oppgave 1.2
+
+```{r}
+
+
+```
+
+### Oppgave 1.3
+
+Vi har nå laget to forskjellige modeller av sammenhengen mellom *inntekt* forklart av *utdanning*, *arbeissektor*, *kjønn* og *alder*. Sammenlikn nøyaktigheten til disse modellene (MSE).
+
+```{r}
+
+```
+
+### Oppgave 1.4
+
+Et problem med samenklikningen i oppgave 1.3 er at vi kun har en observasjon av her modelle. Bruk *cv_pred_error()* for å gjennomføre mange treninger og testinger av modellen. Bruk argumentet: ntrials =20, for å gjennomføre 20 repitisjoner av her trening og test. Hvilken modelle virker til å være best?
+
+```{r}
+
+```
+
+## Oppgave 2
+
+Er det noe forskjeller i vekt på forsendelsene og transport type? Se på datasettet *late_shipments*.
+
+```{r hente data, include=FALSE}
+# Hent inn late shipments dataen
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/late_shipments.Rdata?raw=true"))
+late_shipments <- late_shipments %>% filter(weight_kilograms < 20000)
+late_shipments <- late_shipments %>% filter( shipment_mode != "N/A")
+```
+
+### Oppgave 2.1
+
+Gjennomfør en regresjon mellom pris på forsendeles som avhengig variabel, bruk forsendings metode, vekt og om destinasjoen var den første plassen dratt (*first_line_designation*) til som uavhengige variabler.
+
+```{r}
+
+```
+
+#### Oppgave 2.1.1
+
+Undersøk variablen *first_line_designation* hvorfor kan ikke denne variabelen brukes.
+
+### Oppgave 2.2
+
+Det er mulig at variablene i 2.1 ikke er lineære. Lag et scatterplott mellom vekt og pris. Ser dette ut til å være lineært?
+
+### Oppgave 2.3
+
+Gjennom før regresjoner med logaritment av den avhengie variabelen, en med logaritment av de uavhengige variablene og til slutt logarittment av alle variablene i 2.1 (bortsett fra *first_line_designation*).
+
+Hvilken model er best?
+
+## Oppgave 3
+
+I denne oppgaven skal vi se på om vi burde legge til en ekstra variabel eller ikke. Gjenerelt, hvis ajusted r-squard går opp og den nye variabelen er signifikant har vi gode grunner til å ha den med. Men, vi kan bedømme ut far MSE om vi burde legge til en variabel eller ikke. For denne oppgaven bruk oppgavesettet *BoligData*.
+
+```{r hente data, include=FALSE}
+
+# Bolig prise
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/Bolig.Rdata?raw=true"))
+
+```
+
+### Oppgave 3.1

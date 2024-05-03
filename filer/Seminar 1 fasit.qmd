@@ -1,0 +1,407 @@
+---
+title: "Seminar 1 fasit"
+author: "Eirik Heen"
+format: html
+editor: visual
+date: "Sist redigert `r format(Sys.Date(),'%d %B %Y')` "
+---
+
+```{r setup, include=FALSE}
+##### Start up #####
+# denne code chunken er kun får å gjøre ting "bak" kulissene. så gjør klart dokumentet. Dermed er det include false. 
+rm(list = ls()) # Tommer listen
+
+options(scipen=10) # skriver ut 10 siffer (foran komma)
+options(digits=5) # skriver ut 5 desimaler (etter komma...)
+
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(janitor)
+library(mosaic)
+library(infer)
+
+# Kode for a kunne bruke norske bokstaver
+Sys.setlocale(locale="no_NO")
+
+# Henter inn dataset for seminar basert på spørre undersøkelsen
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/spore_under.Rdata?raw=true") )
+
+
+```
+
+# Seminar 1
+
+I dette seminaret går vi i dybden på datasettet hvor studenter gjennomførte en spørreundersøkelse/survey. Denne survey var laget av studentene og foreleseren. Surveyen tar for seg 23 spørsmål og et identifiserings nummer. Etter rensing av datasettet, noe tulle svar så var det 59 besvarelser igjen. Seminar 1 blir å ha fokus på de 3 første datacamp kursene; Exploratory Data Analysis in R, Introduction to statistics, Sampling in R.
+
+Oppgaven løses i markdown eller i R. Jeg har ikke løst oppgavene på forhånd og målet med seminaret er å løse oppgavene sammen.
+
+## Oppgave 1
+
+### Oppgave 1.1
+
+Få oversikt over datasettet. Start med å ta *glimpse()* av datasettet. Dette kan gi det en god oversikt over hva dataen inneholder.
+
+```{r}
+glimpse(spore_under)
+
+```
+
+### Oppgave 1.2.1
+
+En ting vi ser er at collonene har velig lange navn, som også inneholder mellomrom. Dette kan være greit å kutte ned på. Gi alle collonene nye navn some er korte, forklarende og ikke inneholder mellomrom.
+
+```{r}
+colnames(spore_under) <- make.unique(c("Nummer","Alder","Kjonn","Vekt","Kroppshoyde","Jobb","Jobb_timer","Studentforening","Sport","Sport_timer","Fest","Fest_n_byen","Fest_n_byen","Alkoholkonsum","Studieprogram", "Karakter","UiT","Sporsmal_forelesning","Forventet_karakter","Studietimer","Seminar_metode","Tidsfrist","Arbeidsmengde","Samarbeidsproblem" ) )
+
+```
+
+### Oppgave 1.2.2
+
+Prøv glimps på nytt. Er det letter å få oversikt?
+
+```{r}
+glimpse(spore_under)
+
+```
+
+### Oppgave 1.3
+
+Når vi skal jobbe med en variable kan det være greit å vite hvilken verdier den kan ta. For spørsmålet `Hva synes du om arbeidsmengden pa gruppeeksamen i kvalitativ metode?` se hvilken type svar studetene har svart.
+
+```{r}
+unique(spore_under$Arbeidsmengde)
+
+```
+
+Det var kun 3 alternativer av 5 som ble brukt.
+
+*Komentar*: Spørre skjemaet inneholdt 5 alternativer; *Altfor stor arbeidsmengde, Litt for stor arbeidsmengde, Har ingen mening om arbeidsmengden, Passelig stor arbeidsmengde, Altfor liten arbeidsmengde*. Men vi ser at ikke alle er valgt. Kan være en ide å teke på når uformer spørreskjemaer. Hvem ville svare at en eksamen hadde altfor liten arbeismengde?
+
+### Oppgave 1.4
+
+Nå skal vi se litt på studenter som er med i student foreninger. Bruk summarize til å finne ut hvor stor andel av studentene er medlemmer i en student forening. I tillegg plott antallet som er i og ikke en student forening, hvilket plott er greit å bruke i dette tilfellet?
+
+```{r}
+unique(spore_under$Studentforening)
+spore_under %>% 
+  summarise(sum(Studentforening == "Ja"), sum(Studentforening == "Nei") )
+
+spore_under %>% 
+  summarise(mean(Studentforening == "Ja"), sum(Studentforening == "Nei")/n() )
+
+ggplot(spore_under, aes(x=Studentforening) ) + 
+  geom_bar()
+
+```
+
+### Oppgave 1.5
+
+I plottet tidligere få med hvor mange som jobber i hver gruppe. Ser det ut til at det er noe sammenheng om studenter er medlem av en student forening og om de har jobb ved siden av.
+
+```{r}
+ggplot(spore_under, aes(x=Studentforening, fill=Jobb) )+
+  geom_bar()
+
+```
+
+Fra plottet ser det ut til at de som er med i studentforeninger også jobber ved siden av studiene. Dette betyr at studentene ikke velger mellom å jobbe eller å være med i student foreninger med gjør heller begge eller ingen... ish.
+
+### Oppgave 1.6
+
+La oss sammenlikne menn og kvinner sin vekt. Hvis vi skal lage et plott (eller to) Hvilket plot kan være bra for å vise denne forskjellen (det er flere gode alternativer)? Ser det ut til å være forskjell?
+
+```{r}
+ggplot(spore_under, aes(x=Kjonn, y = Vekt) ) +
+  geom_boxplot()
+ggplot(spore_under, aes(x=Vekt,fill=Kjonn) ) +
+  geom_density(alpha = .3)
+
+```
+
+Kjønn er en kategorisk variable (bokstaver) og vekte er en kontinuerlig (tall). Så her er det best med et boxplot eller density plott.
+
+### 1.7.1
+
+Vi avslutter med litt scatter plots. For scatter plot trenger vi to kontinuerlige variabler, så vi bruker høyde og vekt. Lag et scatter plot, men høyde på x aksen og vekt på y aksen.
+
+```{r}
+ggplot(spore_under, aes(x=Kroppshoyde, y= Vekt)) +
+  geom_point()
+
+```
+
+### Oppgave 1.7.2
+
+Legg til et trend linje i scatter plottet over. Ser det ut til at det er en sammenheng mellom høyde og vekt?
+
+```{r}
+ggplot(spore_under, aes(x=Kroppshoyde, y= Vekt)) +
+  geom_point() +
+  geom_smooth(method = lm)
+
+
+```
+
+Det er en positiv trend mellom høyde og vekt.
+
+### Oppgave 1.7.3
+
+Til slutt legg til farge i plottet fordelt på kjønn. Hva predikerer vekt? Høyde eller kjønn.
+
+```{r}
+ggplot(spore_under, aes(x=Kroppshoyde, y= Vekt, col = Kjonn)) +
+  geom_point() 
+
+
+```
+
+### Oppgave 1.8
+
+Hva er korrelasjon koeffisienten (Person r) mellom høyde og vekt? Ser det ut til å være en sterk sammenheng?
+
+```{r}
+cor(spore_under$Kroppshoyde,spore_under$Vekt)
+
+```
+
+### Oppgave 1.9
+
+Er studentene fornøyd med siden drikker vaner?
+
+```{r}
+ggplot(spore_under, aes(x=Alkoholkonsum)) +
+  geom_bar()
+
+spore_under <- spore_under %>% 
+  mutate(Alkoholkonsum = factor(Alkoholkonsum, levels = c( "Altfor lite", "Litt for lite",  "Passelig",   "Litt for mye", "Ja, altfor mye" )) )
+
+ggplot(spore_under, aes(x=Alkoholkonsum)) +
+  geom_bar()
+
+```
+
+## Oppgave 2
+
+### Oppgave 2.1.1
+
+La oss få ut litt deskriptiv statistikk. Bruk summarise til å finne gjennomsnitt, median, standardavviket og antallet av menn og kvinner sin høyde i survey.
+
+```{r}
+spore_under %>% 
+  group_by(Kjonn) %>%
+  summarise(gj_hoyde = mean(Kroppshoyde), 
+            med_hoyde = median(Kroppshoyde),
+            sd_hoyde = sd(Kroppshoyde),
+            antall = n()
+            )
+
+```
+
+### Oppgave 2.1.2
+
+Bruk gjennomsnitt og standardavvik i fra oppgaven over å besvar følgene spørsmål. Vi antar at høyde er normalfordel. I. Hva er sannsynligheten av en tilfeldig valgt mann er under 175 cm høy? II. Hva er sannsynligheten for at en tilfeldig kvinne er over 165 cm høy? III. Hvis vi skal bestille nye dører og ønsker at 95% av de mannlige studentene skal komme seg igjennom. Hvor høy må denne døren være?
+
+```{r}
+xpnorm(175, mean = 183.69, sd = 7.2462)
+xqnorm(0.95, mean = 183.69, sd = 7.2462)
+
+
+```
+
+### Oppgave 2.2
+
+For gjennomsnitts vekten til studentene skal vi bootstrappe gjennomsnitts vekt. Replikker 1000 ganger, trekk 15 studenter og regn ut gjennomsnittet uten tilbakelegg. Plott resultatet i et histogram.
+
+```{r}
+Hoyde <- replicate(
+  n = 1000, 
+  expr = { 
+    spore_under %>%
+      slice_sample(n = 15, replace = FALSE) %>% 
+      summarise(gj_hoyde = mean(Kroppshoyde) ) %>%
+      pull(gj_hoyde)
+    
+  }
+)
+
+Hoyde <- tibble(Hoyde)
+ggplot(Hoyde, aes(x=Hoyde)) +
+  geom_histogram(bins =30)
+
+```
+
+### Oppgave 2.3.1
+
+For gjennomsnitts vekten til studentene skal vi bootstrappe gjennomsnitts vekt. Replikker 1000 ganger, trekk ut like mange studenter som er i datasettet, med tilbakelegg. Plott resultatet i et histogram. Er det men merkbar endring fra 2.2.
+
+```{r}
+
+Hoyde <- replicate(
+  n = 1000, 
+  expr = { 
+    spore_under %>%
+      slice_sample(prop = 1, replace = TRUE) %>% 
+      summarise(gj_hoyde = mean(Kroppshoyde) ) %>%
+      pull(gj_hoyde)
+    
+  }
+)
+
+Hoyde <- tibble(Hoyde)
+ggplot(Hoyde, aes(x=Hoyde)) +
+  geom_histogram(bins =30)
+
+
+```
+
+### Oppgave 2.3.2
+
+Fra bootstrappingen fra 2.3.1, regn ut gjennomsnitt og standardavvik? Hvorfor er ikke standardavviket til denne fordelingen lik standardavviket til populasjonen?
+
+```{r}
+Hoyde %>% 
+  summarise(gj_hoyde = mean(Hoyde), sd_hoyde = sd(Hoyde))
+
+```
+
+Standardavviket til alle bootstrapede gjennomsnitt forteller oss hvor mye gjennomsnitte beveger seg, dette representerer usikkerheten til hvor gjennomsnittet faktisk er. Standardavviket til populasjon forteller oss hvor stor variasjon som er, eller hvor langt unna alle befinner seg det faktiske mitten.
+
+## Oppgave 3
+
+### Oppgave 3.1
+
+Hva er store talls lov? «De store talls lov» er et begrep som beskriver det forhold at jo flere tilfeller man har av en hendelse jo nærmere vil man komme det forventede resultatet.
+
+Vis store talls lov med å rull en 6 terning. Sett en seed og finn gjennomsnittet til en 6'er terning 5, 10, 100 og 1000 gang.
+
+Hvis du kan prøv å gjør det sammen men lage et kontinuerlig plott fra 1 kast til 1000 kast.
+
+```{r}
+set.seed(5)
+# kaster 5 gang
+mean(
+  sample(1:6, size =5, replace = TRUE)) 
+# kaster 10 gang
+mean(
+  sample(1:6, size =10, replace = TRUE)) 
+# kaster 100 gang
+mean(
+  sample(1:6, size =100, replace = TRUE)) 
+# kaster 1000 gang
+mean(
+  sample(1:6, size =1000, replace = TRUE)) 
+# kaster 1 000 000 gang
+mean(
+  sample(1:6, size =1000000, replace = TRUE)) 
+
+
+```
+
+### Oppgave 3.2
+
+Klarer vi å gjøre det samme for standardavviket til gjennomsnittet (altså standand feilen)? Prøv først med forskjellige nivåer.
+
+**Svar:** Standardfeilen eller standardavviket til gjennomsnittet kan finnes på to måter. enten bruke formelen for standardfeil $\frac{\sigma}{\sqrt{n}}$ eller regne mange gjennomsnitt å ta standardavvike til dem. så en er er matematisk framgang, mens den andre er en nummerisk. La oss se om vi får samme svar.
+
+Husk! Standardfeil forteller oss om hvor "usikker/sikker" vi er på hvor gjennomsnittet ligger. Lavere standardfeil jo mer sikker er vi på hvor det sanne gjennomsnittet faktisk er.
+
+Starter med 5 kast. Første delene er 5 kast og regener ut standardavviket og deler på roten av antall observasjoner. Etterpå tar vi å kaster 5 terninger 100 ganger og regner ut gjennomsnittet til disse 5 terninger, dette gir oss 100 gjennomsnitt som var tar standardavviket.
+
+```{r}
+set.seed(5)
+# kaster 5 gang
+n_kast = 5
+sd(
+  sample(1:6, size = n_kast, replace = TRUE))/sqrt(n_kast)
+
+n_repitisjoner = 100
+kast <- sample(1:6, size = n_kast * n_repitisjoner, replace = TRUE)
+# lager dette til en matrise med 5 kast i hver rad
+m_kast <- matrix(kast, nrow = n_repitisjoner, ncol = n_kast, byrow=TRUE)
+# finner gjennomsnitt og standardavvik til å kaste 
+sd(rowMeans(m_kast))
+
+```
+
+Vi får to tall som ikke er veldig nær. Det en er over 50% større enn det andre. Dette er fordi i har så for observasjoner så vi forventer ikke disse tallene til å være veldig like.
+
+Vi gjennomfører samme test med nå for 10 terninger.
+
+```{r}
+set.seed(5)
+# kaster 10 gang
+n_kast = 10
+sd(
+  sample(1:6, size = n_kast, replace = TRUE))/sqrt(n_kast)
+
+n_repitisjoner = 100
+kast <- sample(1:6, size = n_kast * n_repitisjoner, replace = TRUE)
+# lager dette til en matrise med 5 kast i hver rad
+m_kast <- matrix(kast, nrow = n_repitisjoner, ncol = n_kast, byrow=TRUE)
+# finner gjennomsnitt og standardavvik til å kaste 
+sd(rowMeans(m_kast))
+
+```
+
+Vi ser allerede at begge måtene å regne standarderror gir like resultater, men den teoretiske har gått opp! Igjen dette er pga at vi jobber med få observasjoner.
+
+Sammen gjennomgang men med 100 terninger
+
+```{r}
+set.seed(5)
+# kaster 100 gang
+n_kast = 100
+sd(
+  sample(1:6, size = n_kast, replace = TRUE))/sqrt(n_kast)
+
+n_repitisjoner = 100
+kast <- sample(1:6, size = n_kast * n_repitisjoner, replace = TRUE)
+# lager dette til en matrise med 5 kast i hver rad
+m_kast <- matrix(kast, nrow = n_repitisjoner, ncol = n_kast, byrow=TRUE)
+# finner gjennomsnitt og standardavvik til å kaste 
+sd(rowMeans(m_kast))
+
+```
+
+Nå ser vi at standard erroren har gått kraftig ned. Jo flere observasjoner vi har jo mer sikker er vi på hvor det faktiske gjennomsnittet ligger.
+
+Gjennomfører for 1000 terninger.
+
+```{r}
+set.seed(5)
+# kaster 1 000 gang
+n_kast = 1000
+sd(
+  sample(1:6, size = n_kast, replace = TRUE))/sqrt(n_kast)
+
+n_repitisjoner = 100
+kast <- sample(1:6, size = n_kast * n_repitisjoner, replace = TRUE)
+# lager dette til en matrise med 5 kast i hver rad
+m_kast <- matrix(kast, nrow = n_repitisjoner, ncol = n_kast, byrow=TRUE)
+# finner gjennomsnitt og standardavvik til å kaste 
+sd(rowMeans(m_kast))
+
+```
+
+```{r}
+set.seed(5)
+# kaster 1 000 000 gang
+n_kast = 1000000
+sd(
+  sample(1:6, size = n_kast, replace = TRUE))/sqrt(n_kast)
+
+n_repitisjoner = 100
+kast <- sample(1:6, size = n_kast * n_repitisjoner, replace = TRUE)
+# lager dette til en matrise med 5 kast i hver rad
+m_kast <- matrix(kast, nrow = n_repitisjoner, ncol = n_kast, byrow=TRUE)
+# finner gjennomsnitt og standardavvik til å kaste 
+sd(rowMeans(m_kast))
+
+```
+
+Vi ser at når vi gjør dette for 1 000 000 terninger blir standard erroren veldig lav, vi starter å bli bra sikker at gjennomsnittet ligger nært "3.5006" som vi fant i forrige oppgave.
+
+Oppsumering oppgave 3. Når vi kaster en 6'er terning forventer vi på gjennomsnitt å få 3.5 hvis vi kaster uendelig antall ganger.
+
+Vi så at gjennomsnittet nærmet seg 3.5 når vi kastet mange ganger (oppgave 3.1) og vi så at vi ble mer og mer sikker på at vi faktisk nærmet oss gjennomsnittet (oppgave 3.2).

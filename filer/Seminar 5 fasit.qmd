@@ -1,0 +1,302 @@
+---
+title: "Seminar 5 fasit"
+author: "Eirik Heen"
+format: html
+editor: visual
+date: "Sist redigert `r format(Sys.Date(),'%d %B %Y')` "
+---
+
+```{r setup, include=FALSE}
+##### Start up #####
+
+options(scipen=10) # skriver ut 10 siffer (foran komma)
+options(digits=5) # skriver ut 5 desimaler (etter komma...)
+
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(janitor))
+suppressPackageStartupMessages(library(infer))
+suppressPackageStartupMessages(library(HH))
+suppressPackageStartupMessages(library(mosaic))
+suppressPackageStartupMessages(library(car))
+suppressPackageStartupMessages(library(statisticalModeling))
+suppressPackageStartupMessages(library(rpart))
+suppressPackageStartupMessages(library(rpart.plot))
+
+# Kode for a kunne bruke norske bokstaver
+Sys.setlocale(locale="no_NO")
+
+# Taiwan dataset
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/taiwan_real_estate.Rdata?raw=true"))
+
+# Bolig prise
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/Bolig.Rdata?raw=true"))
+
+```
+
+# Seminar 5
+
+På dette seminaret skal vi se på permutasjons tester av regresjoner, bruke maskin learning på data og bruke MSE (mean squard error) til å sammenlikne modeller.
+
+## Oppgave 1
+
+I denne oppgaven skal vi se på hva som predikerer lønn i datasettet *CPS85*. For å få oversikt over dataen kan du se på dokumentasjonen, trykk [**her**](https://www.rdocumentation.org/packages/mosaicData/versions/0.20.3/topics/CPS85).
+
+```{r hente data, include=FALSE}
+# Henter dataen CPS85
+data("CPS85")
+
+```
+
+### Oppgave 1.1
+
+Gjennomfør en lineær regresjon med *inntekt* som avhengig variabel og *utdanning*, *arbeissektor*, *kjønn* og *alder* som uavhengige variabler. Tolk resultatene fra modellen.
+
+```{r}
+Regresjon <- lm(wage ~ educ + sector + sex + age , data = CPS85 )
+
+summary(Regresjon)
+linearHypothesis(Regresjon, "sectorconst=sectorsales")
+```
+
+#### Oppgave 1.1.1
+
+Fra oppgave 1.1 regn ut MSE (mean squard error) for denne modellen.
+
+```{r}
+
+MSE_lm <- evaluate_model(Regresjon, data = CPS85) %>% 
+  mutate(squard_error = (wage - model_output)^2) %>%
+  summarise(mean(squard_error)) %>%
+  pull()
+MSE_lm
+```
+
+### Oppgave 1.2
+
+Gjennomfør en rekursiv partisjons modell (recursice partitiong, rpart()) med *inntekt* som avhengig variabel og *utdanning*, *arbeissektor*, *kjønn* og *alder* som uavhengige variabler. Tolk resultatene fra modellen. Skriv ut resultatene av modellen.
+
+```{r}
+RecuPart <- rpart(wage ~ educ + sector + sex + age , data = CPS85, cp=0.01 )
+RecuPart
+```
+
+#### Oppgave 1.2.1
+
+Fra oppgave 1.2 tegn resultatene inn i et node diagram.
+
+```{r}
+prp(RecuPart, type=2)
+```
+
+#### Oppgave 1.2.2
+
+Sammenkling resultatene i 1.2 og 1.2.1. Ser strukturen liknende ut.
+
+#### Oppgave 1.2.3
+
+Regn ut MSE for modellen i oppgave 1.2
+
+```{r}
+MSE_rp <- evaluate_model(RecuPart, data = CPS85) %>% 
+  mutate(squard_error = (wage - model_output)^2) %>%
+  summarise(mean(squard_error)) %>%
+  pull()
+MSE_rp
+
+```
+
+### Oppgave 1.3
+
+Vi har nå laget to forskjellige modeller av sammenhengen mellom *inntekt* forklart av *utdanning*, *arbeissektor*, *kjønn* og *alder*. Sammenlikn nøyaktigheten til disse modellene (MSE).
+
+```{r}
+MSE_lm
+MSE_rp
+```
+
+Konklusjon? Her er det mindre feil med recursive parts enn med linjear modeling
+
+### Oppgave 1.4
+
+Et problem med samenklikningen i oppgave 1.3 er at vi kun har en observasjon av her modelle. Bruk *cv_pred_error()* for å gjennomføre mange treninger og testinger av modellen. Bruk argumentet: ntrials =20, for å gjennomføre 20 repitisjoner av her trening og test. Hvilken modelle virker til å være best?
+
+```{r}
+set.seed(1)
+trails <- cv_pred_error(Regresjon, RecuPart, ntrials = 20)
+trials
+mean(mse ~ model, data = trials )
+t.test(mse ~ model, data = trials)
+```
+
+## Oppgave 2
+
+Er det noe forskjeller i vekt på forsendelsene og transport type? Se på datasettet *late_shipments*.
+
+```{r hente data, include=FALSE}
+# Fjerner data fra forrgie oppgave
+rm(list=ls())
+# Hent inn late shipments dataen
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/late_shipments.Rdata?raw=true"))
+late_shipments <- late_shipments %>% filter(weight_kilograms < 20000)
+late_shipments <- late_shipments %>% filter( shipment_mode != "N/A")
+```
+
+### Oppgave 2.1
+
+Gjennomfør en regresjon mellom pris på forsendeles som avhengig variabel, bruk forsendings metode, vekt og om destinasjoen var den første plassen dratt (*first_line_designation*) til som uavhengige variabler.
+
+```{r}
+names(late_shipments)
+Regresjon <- lm(freight_cost_usd ~ 
+                  weight_kilograms +  
+                  first_line_designation, 
+                data = late_shipments  )
+```
+
+#### Oppgave 2.1.1
+
+Undersøk variablen *first_line_designation* hvorfor kan ikke denne variabelen brukes.
+
+```{r}
+summary(late_shipments$first_line_designation)
+unique(late_shipments$first_line_designation)
+```
+
+### Oppgave 2.2
+
+Det er mulig at variablene i 2.1 ikke er lineære. Lag et scatterplott mellom vekt og pris. Ser dette ut til å være lineært?
+
+```{r}
+ggplot(late_shipments, 
+       aes(y=freight_cost_usd, 
+           x=weight_kilograms)) +
+  geom_point()
+
+```
+
+### Oppgave 2.3
+
+Gjennom før regresjoner med logaritment av den avhengie variabelen, en med logaritment av de uavhengige variablene og til slutt logarittment av alle variablene i 2.1 (bortsett fra *first_line_designation*). Tolk resultatene
+
+```{r}
+
+Reg_lin_lin <- lm(freight_cost_usd ~ 
+                    weight_kilograms , 
+                  data = late_shipments)
+summary(Reg_lin_lin)
+
+
+```
+
+Her ser vi at estimatet for weight_kilograms 3.393. Dette betyr at for hver ekstra KG går prisen i USD på gjennomsnitt opp med 3.393 dollar. 
+
+
+```{r}
+Reg_log_lin <- lm(log(freight_cost_usd) ~ 
+                    weight_kilograms , 
+                  data = late_shipments)
+summary(Reg_log_lin)
+
+```
+
+Nå har vi en log-lin model. Nå er weight_kilograms 0.0002727,  dette betyr at for vert ekstra KG i vekt øker prisen med 0.02727 % (her må vi gange med 100 for å få prosent)
+
+```{r}
+
+Reg_lin_log <- lm(freight_cost_usd ~ 
+                    log(weight_kilograms) , 
+                  data = late_shipments)
+summary(Reg_lin_log)
+
+
+```
+
+Her har vi en lin-log model. Her er log(weight_kilograms) 4186, dette betyr at for her 1% økning i vekt KG så øker prisen med 4 186 dollar
+
+```{r}
+Reg_log_log <- lm(log(freight_cost_usd) ~ 
+                log(weight_kilograms) , 
+              data = late_shipments)
+summary(Reg_log_log)
+```
+Her har vi en log-log model. Her er log(weight_kilograms) 0.5430. Dette betyr at for vert 1% økning i vekt øker prisen med 54.30%. 
+
+## Oppgave 3.3
+
+Hvilken model er best?
+
+```{r}
+
+trials <- cv_pred_error(Reg_lin,Reg_log )
+mean(mse ~model, data= trials)/1000000000
+t.test(mse ~model, data= trials)
+
+```
+
+## Oppgave 3
+
+I denne oppgaven skal vi se på om vi burde legge til en ekstra variabel eller ikke. Gjenerelt, hvis ajusted r-squard går opp og den nye variabelen er signifikant har vi gode grunner til å ha den med. Men, vi kan bedømme ut far MSE om vi burde legge til en variabel eller ikke. For denne oppgaven bruk oppgavesettet *BoligData*.
+
+```{r hente data, include=FALSE}
+
+# Bolig prise
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/Bolig.Rdata?raw=true"))
+
+```
+
+### Oppgave 3.1
+
+Fra bolig data lage en lineær modelle hvor pris forklare av alder og areal
+
+```{r}
+
+Regresjon <- lm(Pris ~ Areal + Alder, data = BoligData)
+summary(Regresjon)
+```
+
+### Oppgave 3.1.1
+
+Finn MSE fra opg 3.1
+
+```{r}
+MSE_org <- evaluate_model(Regresjon, data = BoligData) %>%
+  mutate(squard_error = (Pris - model_output )^2  ) %>%
+  summarise(mean(squard_error)) %>%
+  pull()
+
+```
+
+## oppgave 3.2
+
+Legg til en ny variable fra oppg. 3.1. legg til sol!
+
+```{r}
+Regresjon_aug <- lm(Pris ~ Areal + Alder + Sol, data = BoligData)
+summary(Regresjon_aug)
+```
+
+### Oppgave 3.2.1
+
+Regn ut MSE fra oppgave 3.2
+
+```{r}
+MSE_aug <- evaluate_model(Regresjon_aug, data = BoligData) %>%
+  mutate(squard_error = (Pris - model_output )^2  ) %>%
+  summarise(mean(squard_error)) %>%
+  pull()
+
+```
+
+## Oppgave 3.3
+
+Bruk kode cv_pred_error() til å se hvilken modell som er best.
+
+```{r}
+
+trials <- cv_pred_error(Regresjon, Regresjon_aug, ntrials = 20)
+trials
+mean(mse ~model, data= trials)/1000000000
+t.test(mse ~model, data= trials)
+```

@@ -1,0 +1,351 @@
+---
+title: "Seminar 3"
+author: "Eirik Heen"
+format: html
+editor: visual
+date: "Sist redigert `r format(Sys.Date(),'%d %B %Y')` "
+---
+
+
+
+```{r setup, include=FALSE}
+##### Start up #####
+
+options(scipen=10) # skriver ut 10 siffer (foran komma)
+options(digits=5) # skriver ut 5 desimaler (etter komma...)
+
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(janitor))
+suppressPackageStartupMessages(library(infer))
+suppressPackageStartupMessages(library(HH))
+suppressPackageStartupMessages(library(mosaic))
+
+# Kode for a kunne bruke norske bokstaver
+Sys.setlocale(locale="no_NO")
+
+# Henter inn dataset for seminar basert på spørre undersøkelsen
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/sporreunder.Rdata?raw=true") )
+
+# Hent inn late shipments dataen
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/late_shipments.Rdata?raw=true"))
+
+# Velger data
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/dem_county_pres_joined.Rdata?raw=true"))
+
+# Bolig prise
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/Bolig.Rdata?raw=true"))
+
+late_shipments <- late_shipments %>% filter(weight_kilograms < 20000)
+
+```
+
+
+
+# Seminar 3
+
+
+Dette seminaret skal vi se på inferens/induksjon ved hjelp av bootstrapping.
+
+## Oppgave 1
+
+I denne oppgaven skal vi bruke datasettet *sporreunder*.
+
+### Oppgave 1.1 
+
+Hva er gjennomsnittsvekten til studentene i denne? Finn også gjennomsnitts vekten til kvinner og menn. 
+
+```{r}
+
+
+```
+
+### Oppgave 1.2 
+ 
+Plott vekten til kvinner og menn. Hvilket plott er greit å bruke til i denne situasjonen?
+ 
+ 
+```{r}
+
+
+```
+
+
+
+### Oppgave 1.3
+
+Er vekten til studentene mindre enn 78 kg? Dette er en univariat analyse som vil si at vi kun tester en gruppe opp mot en gitt verdi. Besvare alle spøremålene i deloppgavene under. Bruk et signifikansnivå på 10%.
+
+#### Oppgave 1.3.1
+
+Deffiner nullhypotesen $H_{0}$ og alternativshyppotesen $H_{1}$. 
+
+
+
+#### Oppgave 1.3.2
+
+Gjennomfør en bootstrap test via "just one test" framgangsmåten. Gennerer 10000 gjennomsnitt ut fra datasettet med å hente like mange oppsvervasjoner som i datasettet med tilbakelegging. sett nullhypotesen til at gjennomsnittet er 78 kg.
+
+```{r}
+
+
+
+```
+
+
+
+#### Oppgave 1.3.3
+
+Plott resultatet i et histogram med en linje for den faktiske gjennomsnittet.
+
+```{r}
+
+
+```
+
+
+
+
+#### Oppgave 1.3.4
+
+Bruk "get_p_value" for å finne p-verdien fra testen.
+
+```{r}
+
+
+
+
+```
+
+Her får vi at p-verdien er `r p_value_out`.
+
+
+#### Oppgave 1.3.5
+
+Skal vi beholde eller forkaste $H_0$?
+
+
+
+#### Oppgave 1.3.6
+
+Gjennomfør en t-test med samme hyppotes og sammenlikn resultatet.
+
+```{r}
+
+
+
+```
+En t-test er letter å gjennomføre enn en bootstraping test.
+
+### Oppgave 1.4
+
+I denne oppgave skal vi sammenlikne vekten mellom menn og kivnner på samme metode som forrige oppgave. Bruk et signifikant nivå på 1%. Veier menn og kvinner forskjellig? Dette kalles en bivariat analyse fordi vi sammenlikner to grupper. 
+
+#### Oppgave 1.4.1 
+
+Deffiner nullhypotesen $H_{0}$ og alternativshyppotesen $H_{1}$.
+
+
+#### Oppgave 1.4.2
+
+Gjennomfør en premutasjons test via "just one test" framgangsmåten. Gennerer 10000 gjennomsnitt ut fra datasettet med å hente like mange oppsvervasjoner som i datasettet med tilbakelegging. Sett nullhypotesen til at det ikke er noe forskjell i vekt. 
+
+```{r}
+
+
+```
+
+
+
+#### Oppgave 1.4.3
+
+Plott resultatet i et histogram med en linje for den faktiske gjennomsnittet.
+
+```{r}
+
+
+
+```
+Det ser ut som at vårt observert forskjell i gjennomsnitt på `r gj_diff` ikke ser veldig sannsynlig ut å få, gitt at nullhypotsene at det ikke er noe forskjell mellom gruppene. 
+
+
+#### Oppgave 1.4.4
+
+Bruk "get_p_value" for å finne p-verdien fra testen.
+
+```{r}
+
+
+
+```
+P-verdien er `r p_value_out`. 
+
+#### Oppgave 1.4.5
+
+Skal vi beholde eller forkaste $H_0$?
+
+Siden p-verdien er lavere enn signifikansnivået forkaster vi $H_0$ og konkluderer at det er grunn til å tro at det er forskjell i vekt mellom menn og kvinner.
+
+
+#### Oppgave 1.4.6
+
+Gjennomfør en t-test med samme hyppotes og sammenlikn resultatet.
+
+```{r}
+
+
+
+```
+Vi ser av vi i dette tilfellet også får en veldig lav p-verdi og vi kan forkaste $H_{0}$.
+
+
+## Oppgave 2
+
+Vi skal se på sammenhengen av på sammenhengen mellom antall observasjoner og standard error og p-verdi.
+
+Se på datasettet *late_shipments* vekten av forsendelsen er kalt *weight_kilograms*.
+Plott et histogram av vekten på forsendelsen. 
+
+```{r}
+
+
+
+```
+Her ser vi at det er stor variasjon i dataen og den minner ikke om noe som er normalfordelt. Dette betyr at en t-test nok ikke er den beste metoden å bruke her. 
+
+### Oppgave 2.1
+
+Regn ut gjennomsnitts vekten til forsendelse og lagre den i et objekt kalt *gj_vekt*.
+
+```{r}
+
+
+```
+
+
+### Oppgave 2.2
+
+Hva er usikkerheten til dette standardavvike (altså standard error)? Replicer datasettet 1 000 ganger med tilbakelegg å regn ut gjennomsnittet for hver gang. Finn standard avviket av gjennomsnittene (altså stndard error)?
+
+Regn også ut standard erroren ved hjelp av formelen for standard error $se=\frac{\sigma}{\sqrt{n}}$
+
+```{r}
+
+
+
+```
+
+### Oppgave 2.2.1
+La oss anta at vi kun hadde 250 observasjoner 
+
+```{r}
+
+```
+
+
+
+### Oppgave 2.4
+
+Hva er sammenhengen mellom antall observasjoner og standard error og?
+
+
+Vi ser at når antall observasjoner gå ned øker usikkerheten rundt hvor gjennomsnittet befinner seg. 
+
+## Oppgave 3
+
+I denne oppgaven skal vi se på datasettet *BoligData*. Datasettet inneholder 102 boliger med 8 forskjellige variabler for dem. Disse er; salgspris på boligen = "Pris", størrelse = "Areal", hvor gamelt boligen er = "Alder", Om boligen er i sentrum eller ikke = "Sentrum", antal timer sol på sommeren = "Sol", hvit eller ikke hvit hus (1=hvit og 0=ikke hvit) ="Farge", prisvekts siste år = "Prisvekst", hvor godt boligen er isolert= "Isolasjonsgrad".
+
+### Oppgave 3.1 
+
+Plott sammenhenge mellom pris og areal. 
+
+```{r}
+
+
+```
+
+### Oppgave 3.2
+
+Gjennomfør en lineær regresjon for sammenhengen. Ha pris som avhengig variabel. 
+
+```{r}
+
+
+
+```
+
+### Oppgave 3.3
+
+Hvordan tolker man koeffisientene fra regresjonene i oppg 3.2?
+
+Areal: for hver ekstra kvadratmeter øker den forventede prisen på en bolig med 18 792 kr.
+Intercept: for en bolig som er 0 kvadratmeter så forventes prisen til å være 121 870 kr. Siden det er "tull" å ha en bolig som har 0 kvadrat meter er en god tolkning av denne *hva vi betaler for en plass å bo, før vi starter å betale for kvadratmeter*. Nå har det seg slik at p-verdien er større enn 5% så vi skal egentlig si at denne ikke har noe effekt, men legge dette med som tokning. 
+
+
+### Oppgave 3.4
+
+Hvordan tolker man p-verdiene fra regresjonen i oppgave 3.2?
+
+P-verdiene forteller oss om effektene er forskjellig fra null. Så for *Areal* er vi ganske sikker på at effekten er forskjellig fra null, i dette tilfellet positivt. Og på gjennomsnitt så øker prisen med 18 792 kr per kvadrat meter.  
+
+
+### Oppgave 3.5
+
+Gjennomfør en lineær regresjon for sammenhengen, med pris om avhengig variable og areal, alder, isolasjonsgrad, sol timer som uavhengige variabler
+
+```{r}
+
+
+```
+
+### Oppgave 3.6
+
+Hva er forventet pris til et hus som er 150 kvadrat meter, 3 år, har isolasjonsgrad 2 og har 15 sol timer. Og hvor mye mer forventer vi i pris hvis isolasjonsgraden går opp med 1 (altså 3)
+
+
+
+```{r}
+
+
+
+```
+Vi ser at forskjellen i forventet pris mellom disse to husene er 510 018 kr som koeffesienten til *isolasjonsgrad*. 
+
+
+
+## Oppgave 4
+
+Er det noe forskjeller i vekt på forsendelsene og transport type?
+Se på datasettet *late_shipments*.
+
+### Oppgave 4.1
+
+Lag et plot som viser sammenhengen mellom vekt på forsendelsen og transport type (shipment_mode,weight_kilograms). Her kan det være greit å droppe N/A gruppen.
+
+```{r}
+
+
+
+```
+
+### Oppgave 4.2
+
+Kjør en anova test for å se om det er noe forskjell mellom noen av gruppen. Hva er nullhypotesen og alternativs hypotesen til denne testen?
+
+```{r}
+
+```
+
+
+### Oppgave 4.3
+
+Gjennomfør en pariwise t-test for å finne ut hvilken grupper som er forskjellige.
+
+```{r}
+
+
+```
+Det ser ut som at det er forskjell mellom Air og de to andre gruppene. Men ikke noe bevis for at det er noe forskjell i vekt mellom Ocean og Air Charter.
+
+

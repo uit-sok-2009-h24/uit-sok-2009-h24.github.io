@@ -1,0 +1,180 @@
+---
+title: "Seminar 4"
+author: "Eirik Heen"
+format: html
+editor: visual
+date: "Sist redigert `r format(Sys.Date(),'%d %B %Y')` "
+---
+
+```{r setup, include=FALSE}
+##### Start up #####
+rm(list = ls()) # Tommer listen
+
+
+options(scipen=10) # skriver ut 10 siffer (foran komma)
+options(digits=5) # skriver ut 5 desimaler (etter komma...)
+
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(janitor))
+suppressPackageStartupMessages(library(infer))
+suppressPackageStartupMessages(library(HH))
+suppressPackageStartupMessages(library(mosaic))
+
+# Kode for a kunne bruke norske bokstaver
+Sys.setlocale(locale="no_NO")
+
+# Taiwan dataset
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/taiwan_real_estate.Rdata?raw=true"))
+
+# Hent inn late shipments dataen
+load(url("https://github.com/uit-sok-2009-h22/uit-sok-2009-h22.github.io/blob/main/filer/late_shipments.Rdata?raw=true"))
+late_shipments <- late_shipments %>% filter(weight_kilograms < 20000)
+late_shipments <- late_shipments %>% filter( shipment_mode != "N/A")
+
+
+```
+
+# Seminar 4
+
+Dette seminaret skal vi se på multippel regresjon, og tolkning av dette.
+
+## Oppgave 1
+
+I denne oppgaven skal vi bruke datasettet angåend priser på boliger i Taiwan *taiwan_real_estate*. I dette datasettet 414 hus/leiligheter med 4 variabler. Disse variablere er pris per kvadrat meter (price_twd_msq), antall butikker i nærheten (n_convenience), avstand til metro i meter (dist_to_mrt_m) og alder på bolig i tre kategorier (house_age_years)
+
+### Oppgave 1.1
+
+Start med å lage et scatterplot mellom pris på y aksen og avstand til metroen på x aksen. Hvordan ser sammenhengen ut? Burde disse være lineær?
+
+```{r}
+
+
+```
+
+### Oppgave 1.2
+
+Start med å lage et scatterplot mellom pris på y aksen og avstand til metroen på x aksen. Denne gangen bruk kvadratroten av begge variablene. Så prøv å bruke logaritmen isteden. Hvilken ser ut til å passe best?
+
+```{r}
+
+
+```
+
+### Oppgave 1.3
+
+Start med å lage et scatterplot mellom pris på y aksen og avstand til metroen på x aksen, leg til antall butikker i nærheten i skalerende farge. La x og y være på logaritmisk form.
+
+```{r}
+
+```
+
+### Oppgave 1.4
+
+Gjennomfør en lineær regresjon med pris som den avhengig variable, og antall butikker og avstand til metroen som uavhengige variabler. Tolk resultatet
+
+```{r}
+
+```
+
+#### Oppgave 1.4.1
+
+Gjennomfør en lineær regresjon med pris som den avhengig variable, og antall butikker og *men kvadrat rooten av* avstand til metroen som uavhengige variabler. Hvilken av disse to modelene er best? Tolk resultatet
+
+```{r}
+
+```
+
+#### Oppgave 1.4.2
+
+Fra oppgave 1.4.1 prediker pris per kvadratmeter til et hus/leilighet som har 4 butikker i nærheten og er 1'600 meter fra metroen.
+
+```{r}
+
+```
+
+#### Oppgave 1.4.3
+
+Fra oppgave 1.4.1 prediker pris per kvadratmeter til et hus/leilighet som har **5** butikker i nærheten og er 1'600 meter fra metroen. Hva er differansen fra oppgave 1.4.2?
+
+```{r}
+
+```
+
+### Oppgave 1.5
+
+Gjennomfør en lineær regresjon med pris som den avhengig variable. Som uavhengig variabler bruk antall butikker, kvadrat rooten av avstand til metroen, lag en interaksjons variable mellom antall butikker og avstand til metroen som uavhengige variabler i tillegg til alder på hus/leilighet. Tolk resultatet.
+
+```{r}
+
+
+```
+
+#### Oppgave 1.5.1
+
+Hva er effekten av en ekstra butikk i nærheten på kvadratmeterpris?
+
+```{r}
+
+```
+
+#### Oppgave 1.5.2
+
+Gjennomfør en lineær regresjon med *kvadratroot* pris som den avhengig variable. Som uavhengig variabler bruk antall butikker, *kvadratroot* av avstand til metroen, lag en interaksjons variable mellom antall butikker og avstand til metroen som uavhengige variabler i tillegg til alder på hus/leilighet. Tolk resultatet.
+
+```{r}
+
+```
+
+## Oppgave 2
+
+Er det noe forskjeller i vekt på forsendelsene og transport type? Se på datasettet *late_shipments*.
+
+### Oppgave 2.1
+
+Gjennomfør en regresjon mellom pris på forsendeles som avhengig variabel, bruk forsendings metode, vekt og om destinasjoen var den første plassen dratt (*first_line_designation*) til som uavhengige variabler.
+
+```{r}
+
+```
+
+#### Oppgave 2.1.1
+
+Undersøk variablen *first_line_designation* hvorfor kan ikke denne variabelen brukes.
+
+### Oppgave 2.2
+
+Det er mulig at variablene i 2.1 ikke er lineære. Lag et scatterplott mellom vekt og pris. Ser dette ut til å være lineært?
+
+## Oppgave 3
+
+Er det noe forskjeller i vekt på forsendelsene og transport type? Se på datasettet *late_shipments*.
+
+### Oppgave 3.1
+
+Lag et plot som viser sammenhengen mellom vekt på forsendelsen og transport type (shipment_mode,weight_kilograms). Her kan det være greit å droppe N/A gruppen.
+
+```{r}
+
+late_shipments <- late_shipments %>% filter(shipment_mode != "N/A" )
+
+
+```
+
+### Oppgave 3.2
+
+Kjør en anova test for å se om det er noe forskjell mellom noen av gruppen. Hva er nullhypotesen og alternativs hypotesen til denne testen?
+
+```{r}
+
+```
+
+### Oppgave 3.3
+
+Gjennomfør en pariwise t-test for å finne ut hvilken grupper som er forskjellige.
+
+```{r}
+
+
+```
