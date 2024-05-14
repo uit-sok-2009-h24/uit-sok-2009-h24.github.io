@@ -11,7 +11,7 @@ Eksamen inneholder informasjon om eksamen.
 - [Eksamen](eksamen.html)
 - [Seminar](seminarplan.html)
 
-[Timeplan](https://timeplan.uit.no/emne_timeplan.php?sem=22h&fag=&module[]=SOK-2009-1#week-23){:target="blank"} på timeplan.uit.no
+[Timeplan](https://timeplan.uit.no/emne_timeplan.php?sem=24h&fag=&module[]=SOK-2009-1){:target="blank"} på timeplan.uit.no (NB: Her vil endringer komme!)
 
 Universitetets egne kursbeskrivelse finner du på UiT sin hjemme side [link](https://uit.no/utdanning/emner/emne?p_document_id=766157)
 
