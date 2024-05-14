@@ -17,7 +17,7 @@ Universitetets egne kursbeskrivelse finner du på UiT sin hjemme side [link](htt
 
 ## Kursbeskrivelse 
 
-Kurset tas nomralt i tredje semster, og teller 10 studiepoeng.
+Kurset tas normalt i tredje semester, og teller 10 studiepoeng.
 Kurest består av online oppgaver via [Datacamp](datacamp.com), forelesninger og seminarer. Hver forelesning har et tema dette er knyttet opp til et kurs i datacamp. Det er lagt opp til at dere gjennomfører datacamp kurest før forelesning. Dette gjøres så dere blir litt kjent med koden og teorien før forelesningene. I forelesningene blir det mer tid brukt på teorien rundt temaet for uken, forståelse og tolking av resultatene.
 Seminarene blir basert på oppgavegjennomgang. 
 
